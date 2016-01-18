@@ -17,12 +17,12 @@ int main(int argc, char *argv[])
     struct sockaddr_in server_addr;
    // struct hostent *server;
 
-    char inBuffer[256];
-    char outBuffer[256];
-    // if (argc < 3) {
-    //    fprintf(stderr,"usage %s hostname port\n", argv[0]);
-    //    exit(0);
-    // }
+    char inBuffer[513];
+    // char outBuffer[512];
+    if (argc < 3) {
+       fprintf(stderr,"usage %s serverIP port\n", argv[0]);
+       exit(0);
+    }
 
     /* create socket, get sockfd handle */
 
@@ -55,8 +55,8 @@ int main(int argc, char *argv[])
     /* ask user for input */
 
     //xprintf("Enter the File: ");
-    bzero(inBuffer,256);
-    fgets(inBuffer,255,stdin);
+    bzero(inBuffer,513);
+    fgets(inBuffer,512,stdin);
 
     /* send user message to server */
 
@@ -67,14 +67,17 @@ int main(int argc, char *argv[])
     
 
     /* read reply from server */
+    int sum = 0;
     while(1){
-        bzero(inBuffer,256);
-        n = read(sockfd,inBuffer,255);
+        bzero(inBuffer,513);
+        n = read(sockfd,inBuffer,512);
+        sum = sum + n;
         if (n < 0) 
             error("ERROR reading from socket");
         if(n == 0) break;
-        printf("%d\n",n);
-        printf("%s\n",inBuffer);
+        // printf("%d\n",n);
+        //printf("%s\n",inBuffer);
     }
+    printf("Total Bytes received: %d\n",sum);
     return 0;
 }

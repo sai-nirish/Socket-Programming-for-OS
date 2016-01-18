@@ -14,7 +14,7 @@ void error(char *msg)
 int main(int argc, char *argv[])
 {
      int sockfd, newsockfd, portno, clilen;
-     char inBuffer[256],file[100],outBuffer[100];
+     char inBuffer[256],file[100],outBuffer[512];
      struct sockaddr_in serv_addr, cli_addr;
      int n;
      if (argc < 2) {
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
      printf("file: %s\n",file);
      FILE* fp;
      fp = fopen((const char*)file,"r");
-     bzero(outBuffer,100);
+     bzero(outBuffer,512);
      int bytesRead = 0;
      if(fp != NULL){
         while((bytesRead = fread(outBuffer,1,sizeof(outBuffer),fp))>0){
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
             n = write(newsockfd,outBuffer,bytesRead);
             if (n < 0) error("ERROR writing to socket");
             printf("bytesWritten: %d\n", n);
-            bzero(outBuffer,100);
+            bzero(outBuffer,512);
         }
         if (feof(fp)) {
         printf("End-of-File reached.\n");
