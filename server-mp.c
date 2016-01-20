@@ -18,9 +18,9 @@ int main(int argc, char *argv[])
     int sockfd, newsockfd, portno, clilen;
     char inBuffer[256],file[100],outBuffer[512];
     struct sockaddr_in serv_addr, cli_addr;
-    int n,status;
-    pid_t child_pid,wait_pid;
-    if (argc < 2) {
+    int n;
+    pid_t child_pid;
+    if (argc < 2) { 
         fprintf(stderr,"ERROR, no port provided\n");
         exit(1);
     }
@@ -51,6 +51,7 @@ int main(int argc, char *argv[])
 
     /* accept a new request, create a newsockfd */
     while (1) {
+        printf("Accepting new connection \n");
         newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
         if (newsockfd < 0) 
          error("ERROR on accept");
@@ -68,10 +69,10 @@ int main(int argc, char *argv[])
             printf("Here is the message: %s, %d\n",inBuffer,n);
             if(inBuffer[0] == 'g' && inBuffer[1] == 'e' && inBuffer[2] == 't'){
                 int i = 0;
-                for(i = 0;i < n-5;i++){
+                for(i = 0;i < n-4;i++){
                     file[i] = inBuffer[i+4];
                 }
-                file[n-5] = '\0';
+                file[n-4] = '\0';
             }
             printf("file: %s\n",file);
             FILE* fp;
@@ -80,10 +81,10 @@ int main(int argc, char *argv[])
             int bytesRead = 0;
             if(fp != NULL){
                 while((bytesRead = fread(outBuffer,1,sizeof(outBuffer),fp))>0){
-                    printf("bytesRead: %d\n", bytesRead );
+                    // printf("bytesRead: %d\n", bytesRead );
                     n = write(newsockfd,outBuffer,bytesRead);
                     if (n < 0) error("ERROR writing to socket");
-                    printf("bytesWritten: %d\n", n);
+                    // printf("bytesWritten: %d\n", n);
                     bzero(outBuffer,512);
                 }
                 if (feof(fp)) {
@@ -92,32 +93,14 @@ int main(int argc, char *argv[])
                 else printf("End-of-File was not reached. \n");
                 fclose (fp);
                 }
+                close(newsockfd);
                 exit(0);
         }
         else {
-            do {
-                wait_pid = waitpid(child_pid, &status, WUNTRACED | WCONTINUED );
-                if (wait_pid == -1) {
-                    error("waitpid");
-                    exit(1);
-                }
-                if (WIFEXITED(status)) {
-                    printf("child exited, status=%d\n", WEXITSTATUS(status));
-                } 
-                else if (WIFSIGNALED(status)) {
-                    printf("child killed (signal %d)\n", WTERMSIG(status));
-                }
-                 else if (WIFSTOPPED(status)) {
-                    printf("child stopped (signal %d)\n", WSTOPSIG(status));
-                } 
-                else if (WIFCONTINUED(status)) {
-                    printf("child continued\n");
-                } 
-                else {    /* Non-standard case -- may never happen */
-                    printf("Unexpected status (0x%x)\n", status);
-                }
-            } 
-            while (!WIFEXITED(status) && !WIFSIGNALED(status));
+            int wait_pid;
+            while((wait_pid = waitpid(-1, NULL, WNOHANG))> 0){
+                printf("reaped %d \n",wait_pid);
+            }
         close(newsockfd);
         }
     } 
